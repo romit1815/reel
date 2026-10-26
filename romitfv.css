@@ -14,7 +14,7 @@
   
   --text-primary: #f4f4f5;
   --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
+  --text-muted: #8b8b95;
   
   --accent-primary: #8b5cf6;
   --accent-hover: #7c3aed;
@@ -220,7 +220,14 @@ button {
 .nav-desktop {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: clamp(0.35rem, 0.8vw, 0.75rem);
+}
+
+.nav-desktop .nav-link {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.55rem;
 }
 
 .nav-link {
@@ -1926,6 +1933,12 @@ button {
 .hidden { display: none !important; }
 .text-center { text-align: center; }
 
+/* Keep the full navigation on wider screens; use the menu before links get cramped. */
+@media (max-width: 1200px) {
+  .header .nav-desktop { display: none; }
+  .header .hamburger-btn { display: flex; }
+}
+
 @media (max-width: 768px) {
   .nav-desktop { display: none; }
   .hamburger-btn { display: flex; }
@@ -2550,4 +2563,74 @@ button {
   .c-primary-email { font-size: 0.85rem; }
   .c-success-title { font-size: 0.88rem; }
   .c-success-sub   { font-size: 0.8rem; }
+}
+
+/* ── Info section two-column layout ─────────────────────────────────────── */
+.info-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem 3rem;
+  margin: 2rem 0;
+}
+@media (max-width: 768px) {
+  .info-cols {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+.info-col {
+  min-width: 0;
+}
+.info-col h2 {
+  margin-top: 0;
+}
+
+/* ── Troubleshooting table ───────────────────────────────────────────────── */
+.troubleshoot-table-wrap {
+  overflow-x: auto;
+  margin: 1.5rem 0 2rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+}
+.troubleshoot-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  background: var(--bg-card);
+}
+.troubleshoot-table th,
+.troubleshoot-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+.troubleshoot-table thead th {
+  background: var(--bg-surface);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.troubleshoot-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.troubleshoot-table tbody tr:hover {
+  background: var(--bg-card-hover, var(--bg-surface));
+}
+@media (max-width: 640px) {
+  .troubleshoot-table th,
+  .troubleshoot-table td {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.82rem;
+  }
+}
+
+/* ── Ad container ────────────────────────────────────────────────────────── */
+.ad-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 20px auto;
 }

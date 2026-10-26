@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://reel.fbviddl.com/sitemap.xml
+Sitemap: https://facebook-reel-downloader.fbviddl.com/sitemap.xml

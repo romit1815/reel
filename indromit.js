@@ -20,6 +20,7 @@ const DP_WORKERS = [
 // ========================================
 // ELEMENTS
 // ========================================
+const isHindiPage = document.documentElement.lang === "hi";
 const downloadForm = document.getElementById("downloadForm");
 const videoUrlInput = document.getElementById("videoUrl");
 
@@ -50,20 +51,29 @@ const scrollToUpdatesTopBtn = document.getElementById("scrollToUpdatesTop");
 async function fetchVideo(videoUrl) {
 
   let error = "All workers failed.";
+  const deadline = Date.now() + 20000;
 
   for (const worker of VIDEO_WORKERS) {
+
+    const timeRemaining = deadline - Date.now();
+    if (timeRemaining <= 0) break;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeRemaining);
 
     try {
 
       const response = await fetch(
-        `${worker}/video?url=${encodeURIComponent(videoUrl)}`
+        `${worker}/video?url=${encodeURIComponent(videoUrl)}`,
+        { signal: controller.signal }
       );
 
-      if (!response.ok) continue;
+      if (!response.ok) {
+        error = `Worker request failed (${response.status}).`;
+        continue;
+      }
 
       const data = await response.json();
-
-      console.log("VIDEO:", data);
 
       if (data.success && (data.hd || data.sd)) {
 
@@ -77,10 +87,19 @@ async function fetchVideo(videoUrl) {
 
     } catch (e) {
 
-      console.log(e);
+      if (Date.now() >= deadline || e.name === "AbortError") {
+        error = "The request timed out. Please try again in a moment.";
+      } else {
+        error = e.message || error;
+      }
 
-      error = e.message;
+    } finally {
+      clearTimeout(timeoutId);
     }
+  }
+
+  if (Date.now() >= deadline) {
+    throw new Error("The request timed out. Please try again in a moment.");
   }
 
   throw new Error(error);
@@ -166,7 +185,7 @@ function setLoading(state) {
 // ========================================
 function showError(message) {
   if (!errorText || !errorMessage) return;
-  errorText.textContent = message;
+  errorText.textContent = isHindiPage ? "इस Facebook लिंक से वीडियो उपलब्ध नहीं हुआ। सार्वजनिकता और लिंक जाँचकर फिर कोशिश करें।" : message;
 
   errorMessage.classList.remove("hidden");
   errorMessage.removeAttribute("hidden");
@@ -202,7 +221,7 @@ function showResult(hd, sd, worker) {
 
   if (!video) {
 
-    showError("No video found.");
+    showError(isHindiPage ? "इस लिंक पर वीडियो नहीं मिला।" : "No video found.");
 
     return;
   }
@@ -288,7 +307,7 @@ if (sdDownload) {
 if (videoPreview) {
   videoPreview.addEventListener("error", (e) => {
     console.log("Video load error:", e);
-    showError("Failed to load video preview. You can still try downloading.");
+    showError(isHindiPage ? "वीडियो प्रीव्यू लोड नहीं हुआ। डाउनलोड विकल्प आज़मा सकते हैं।" : "Failed to load video preview. You can still try downloading.");
   });
 }
 
@@ -340,6 +359,20 @@ if (scrollToUpdatesTopBtn) {
 // ========================================
 // VIDEO FORM
 // ========================================
+function isSupportedFacebookUrl(value) {
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
+
+    const hostname = parsed.hostname.toLowerCase();
+    return hostname === "facebook.com" ||
+      hostname.endsWith(".facebook.com") ||
+      hostname === "fb.watch";
+  } catch {
+    return false;
+  }
+}
+
 downloadForm.addEventListener("submit", async (e) => {
 
   e.preventDefault();
@@ -348,12 +381,9 @@ downloadForm.addEventListener("submit", async (e) => {
 
   if (!url) return;
 
-  if (
-    !url.includes("facebook.com") &&
-    !url.includes("fb.watch")
-  ) {
+  if (!isSupportedFacebookUrl(url)) {
 
-    showError("Please enter valid Facebook URL.");
+    showError(isHindiPage ? "कृपया मान्य Facebook लिंक डालें।" : "Please enter a valid Facebook URL, such as facebook.com or fb.watch.");
 
     return;
   }
